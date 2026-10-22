@@ -27,7 +27,9 @@ import tempfile
 
 MAX_COMMAND_LENGTH = 8191
 
-_classic_spawn = ccompiler.CCompiler.spawn
+# New setuptools compilers execute through call(); spawn() is a legacy wrapper.
+_compiler_entry_point = "call" if hasattr(ccompiler.CCompiler, "call") else "spawn"
+_classic_spawn = getattr(ccompiler.CCompiler, _compiler_entry_point)
 
 
 def escape_arg(arg):
@@ -120,4 +122,4 @@ def _commandfile_spawn(self, command, **kwargs):
 def monkeypatch_spawn():
     """Monkeypatching is dumb, but it's either that or we become maintainers of
     something much, much bigger."""
-    ccompiler.CCompiler.spawn = _commandfile_spawn
+    setattr(ccompiler.CCompiler, _compiler_entry_point, _commandfile_spawn)
